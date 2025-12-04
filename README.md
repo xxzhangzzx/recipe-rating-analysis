@@ -1,2 +1,2 @@
-# recipe-rating-analysis
-Final project for DSC 80 at UCSD analyzing Food.com recipes and ratings.
+# Recipe Ratings and Cooking Time
+This site presents my DSC 80 final project on Food.com recipes and ratings.
