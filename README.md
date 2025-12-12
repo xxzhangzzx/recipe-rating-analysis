@@ -127,3 +127,22 @@ First, I tested dependence on `n_steps`. As the test statistic, I used the absol
 The observed statistic lies far in the upper tail of the permutation distribution, and the empirical p-value is essentially 0. This suggests that the missingness of `rating` is not independent of `n_steps`: recipes with more steps are slightly more likely to have missing ratings.
 
 For comparison, I repeated the same style of test using `minutes` (cooking time) instead of `n_steps`. In that case, the p-value was around 0.12, so I do not have strong evidence that rating missingness depends on cooking time alone.
+
+## Hypothesis Testing
+
+For my hypothesis test, I focused on whether very quick recipes and very long recipes receive different average ratings. Using the cleaned `recipes_clean` DataFrame, I formed two groups:
+
+- **Group A (quick recipes):** recipes with `minutes` ≤ 30  
+- **Group B (very long recipes):** recipes with `minutes` > 120  
+
+The response variable in both groups is the average rating `avg_rating`.
+
+**Null Hypothesis (H₀):**  
+There is no difference in the average rating between quick recipes and very long recipes. Any observed difference in mean `avg_rating` between the two groups is due to random chance.
+
+**Alternative Hypothesis (H₁):**  
+There is a difference in the average rating between quick recipes and very long recipes.
+
+I used the **absolute difference in mean `avg_rating`** between the two groups as my test statistic. In the observed data, this difference was about 0.034. I performed a permutation test at a significance level of α = 0.05 by repeatedly shuffling the group labels and recomputing the difference in mean ratings. Across 1000 permutations, none of the shuffled differences were as large as the observed one, giving an empirical p-value that was effectively 0.
+
+Because this p-value is far below 0.05, I reject the null hypothesis and conclude that there is statistically significant evidence of a difference in average ratings between quick and very long recipes. However, the effect size (a difference of about 0.03 stars) is very small in practical terms, so while the difference is statistically detectable due to the large sample size, it may not be meaningful for a typical home cook deciding what to make.
