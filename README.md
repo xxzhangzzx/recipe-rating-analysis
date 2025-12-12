@@ -40,6 +40,16 @@ Next, I computed the average rating for each recipe and merged this back into th
 
 All of my later analysis and modeling steps use this cleaned `recipes_clean` DataFrame.
 
+The table below shows the first five rows of my cleaned `recipes_clean` DataFrame:
+
+| name                                 | minutes | avg_rating | n_steps | n_ingredients | calories | log_minutes | log_calories | minutes_bin |
+|--------------------------------------|---------|-----------:|--------:|--------------:|---------:|------------:|-------------:|------------:|
+| 1 brownies in the world best ever    |      40 |        4.0 |      10 |             9 |    138.4 |      3.7136 |       4.9374 | 30-60       |
+| 1 in canada chocolate chip cookies   |      45 |        5.0 |      12 |            11 |    595.1 |      3.8286 |       6.3904 | 30-60       |
+| 412 broccoli casserole               |      40 |        5.0 |       6 |             9 |    194.8 |      3.7136 |       5.2771 | 30-60       |
+| millionaire pound cake               |     120 |        5.0 |       7 |             7 |    878.3 |      4.7958 |       6.7791 | 60-120      |
+| 2000 meatloaf                        |      90 |        5.0 |      17 |            13 |    267.0 |      4.5109 |       5.5910 | 60-120      |
+
 ### Univariate Analysis
 
 The first figure below shows the distribution of average recipe ratings (`avg_rating`) across all recipes.
