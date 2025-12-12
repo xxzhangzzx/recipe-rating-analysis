@@ -132,8 +132,8 @@ For comparison, I repeated the same style of test using `minutes` (cooking time)
 
 For my hypothesis test, I focused on whether very quick recipes and very long recipes receive different average ratings. Using the cleaned `recipes_clean` DataFrame, I formed two groups:
 
-- **Group A (quick recipes):** recipes with `minutes` ≤ 30  
-- **Group B (very long recipes):** recipes with `minutes` > 120  
+- **Group A:** recipes with `minutes` ≤ 30  
+- **Group B:** recipes with `minutes` > 120  
 
 The response variable in both groups is the average rating `avg_rating`.
 
@@ -146,3 +146,23 @@ There is a difference in the average rating between quick recipes and very long 
 I used the **absolute difference in mean `avg_rating`** between the two groups as my test statistic. In the observed data, this difference was about 0.034. I performed a permutation test at a significance level of α = 0.05 by repeatedly shuffling the group labels and recomputing the difference in mean ratings. Across 1000 permutations, none of the shuffled differences were as large as the observed one, giving an empirical p-value that was effectively 0.
 
 Because this p-value is far below 0.05, I reject the null hypothesis and conclude that there is statistically significant evidence of a difference in average ratings between quick and very long recipes. However, the effect size (a difference of about 0.03 stars) is very small in practical terms, so while the difference is statistically detectable due to the large sample size, it may not be meaningful for a typical home cook deciding what to make.
+
+## Framing a Prediction Problem
+
+My prediction problem is: **given a recipe’s basic characteristics, can we predict whether it will be highly rated on Food.com?** This is a binary classification task. I define the response variable `is_highly_rated` to be 1 if a recipe’s average rating `avg_rating` is at least 4.5 stars, and 0 otherwise. This threshold captures recipes that are not just “okay” but genuinely well-liked by users.
+
+At the time of prediction, we assume the recipe has just been created and posted, before any user ratings or reviews exist. Therefore, the model only uses features that are known upfront, such as `minutes`, `n_steps`, `n_ingredients`, and simple nutrition fields (e.g. `calories`, `protein_pdv`). For evaluation, I focus on both **accuracy** and the **F1-score** for the positive class. Accuracy tells us how often the model is correct overall, while F1 is more informative in this slightly imbalanced setting, since it balances precision and recall when identifying highly rated recipes.
+
+## Baseline Model
+
+For my baseline model, I built a simple logistic regression classifier to predict whether a recipe is highly rated (`is_highly_rated` = 1 if `avg_rating ≥ 4.5`, 0 otherwise). The model uses only a small set of basic numeric features that are known at the time the recipe is posted:
+
+- `minutes` (quantitative)
+- `n_steps` (quantitative)
+- `n_ingredients` (quantitative)
+- `calories` (quantitative)
+- `protein_pdv` (quantitative)
+
+All five features are quantitative; there are no ordinal or nominal features in the baseline. In the sklearn `Pipeline`, I applied a `StandardScaler` to these numeric columns using a `ColumnTransformer`, then fit a `LogisticRegression` classifier with default hyperparameters. There was no special encoding needed since I did not include any categorical variables at this stage.
+
+On the held-out test set, the baseline model achieved an accuracy of about 0.75 and an F1-score of roughly 0.86 for the positive (“highly rated”) class. However, the classification report shows that the model almost never predicts the negative class: the recall and F1-score for `0` are essentially 0. This means the model is taking advantage of the class imbalance by predicting almost all recipes as highly rated. As a result, while the accuracy looks decent, I do not consider this baseline to be a “good” model in a practical sense, and it motivates the need for a stronger final model with better handling of class imbalance and richer feature engineering.
