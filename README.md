@@ -1,4 +1,3 @@
-# Recipe Ratings and Cooking Time
 This site presents my DSC 80 final project on Food.com recipes and ratings.
 
 ## Introduction
@@ -101,3 +100,30 @@ To summarize the relationship between cooking time and ratings numerically, I co
 | >120        |  7802 | 4.58969  |      5 |
 
 Across all four categories, the mean and median ratings are very similar and remain close to the maximum of 5 stars. This table reinforces what we saw in the visualizations: longer recipes are not systematically rated higher or lower than quicker recipes, at least in this dataset.
+
+## Assessment of Missingness
+
+### NMAR Analysis
+
+I believe that the `review` column is a good candidate for NMAR (Not Missing At Random). In this dataset, a `review` is a free text comment that a user can choose to leave in addition to a numeric rating. Whether someone writes a review is likely driven by their unobserved personal reaction to the recipe. For example, they might only take the time to write something if they absolutely loved the dish or if they had a very negative experience.
+
+This underlying opinion is not recorded elsewhere in the data when the review is missing, and it is not just a simple function of observed variables like `minutes` or `avg_rating`. Because the decision to leave a review depends on the user’s internal motivation, which we do not observe, the missingness mechanism for `review` is likely NMAR.
+
+To make this closer to MAR, I would need extra information about user behavior, such as how often they write reviews across different recipes, or whether they were prompted to leave a comment. These additional variables could help explain why some users skip the review text field and turn the missingness of `review` into something that is more predictable from observed data.
+
+### Missingness Dependency
+
+I focused on the missingness of the `rating` column in the merged dataset. I defined a Boolean variable `rating_missing` and asked whether this missingness depends on other recipe features.
+
+First, I tested dependence on `n_steps`. As the test statistic, I used the absolute difference in the mean `n_steps` between recipes with missing ratings and recipes with observed ratings, and ran a permutation test by repeatedly shuffling the missingness labels. The permutation distribution is shown below, with the observed difference marked in red:
+
+<iframe
+  src="assets/rating_missing_nsteps_perm.html"
+  width="800"
+  height="500"
+  frameborder="0"
+></iframe>
+
+The observed statistic lies far in the upper tail of the permutation distribution, and the empirical p-value is essentially 0. This suggests that the missingness of `rating` is not independent of `n_steps`: recipes with more steps are slightly more likely to have missing ratings.
+
+For comparison, I repeated the same style of test using `minutes` (cooking time) instead of `n_steps`. In that case, the p-value was around 0.12, so I do not have strong evidence that rating missingness depends on cooking time alone.
