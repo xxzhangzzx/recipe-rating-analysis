@@ -155,7 +155,7 @@ At the time of prediction, we assume the recipe has just been created and posted
 
 ## Baseline Model
 
-For my baseline model, I built a simple logistic regression classifier to predict whether a recipe is highly rated (`is_highly_rated` = 1 if `avg_rating ≥ 4.5`, 0 otherwise). The model uses only a small set of basic numeric features that are known at the time the recipe is posted:
+For my baseline model, I built a simple logistic regression classifier to predict whether a recipe is highly rated, `is_highly_rated` = 1 if `avg_rating ≥ 4.5`, 0 otherwise. The model uses only a small set of basic numeric features that are known at the time the recipe is posted:
 
 - `minutes` (quantitative)
 - `n_steps` (quantitative)
@@ -165,4 +165,38 @@ For my baseline model, I built a simple logistic regression classifier to predic
 
 All five features are quantitative; there are no ordinal or nominal features in the baseline. In the sklearn `Pipeline`, I applied a `StandardScaler` to these numeric columns using a `ColumnTransformer`, then fit a `LogisticRegression` classifier with default hyperparameters. There was no special encoding needed since I did not include any categorical variables at this stage.
 
-On the held-out test set, the baseline model achieved an accuracy of about 0.75 and an F1-score of roughly 0.86 for the positive (“highly rated”) class. However, the classification report shows that the model almost never predicts the negative class: the recall and F1-score for `0` are essentially 0. This means the model is taking advantage of the class imbalance by predicting almost all recipes as highly rated. As a result, while the accuracy looks decent, I do not consider this baseline to be a “good” model in a practical sense, and it motivates the need for a stronger final model with better handling of class imbalance and richer feature engineering.
+On the held-out test set, the baseline model achieved an accuracy of about 0.75 and an F1-score of roughly 0.86 for the positive class. However, the classification report shows that the model almost never predicts the negative class: the recall and F1-score for `0` are essentially 0. This means the model is taking advantage of the class imbalance by predicting almost all recipes as highly rated. As a result, while the accuracy looks decent, I do not consider this baseline to be a “good” model in a practical sense, and it motivates the need for a stronger final model with better handling of class imbalance and richer feature engineering.
+
+## Final Model
+
+For my final model, I kept the same prediction task but added a few features and used a richer preprocessing + tuning setup.
+
+On top of the baseline features (`minutes`, `n_steps`, `n_ingredients`, `calories`, `protein_pdv`), I added:
+
+- `minutes_per_step`: time per step, which reflects how “intense” each step is.
+- `log_minutes` and `log_calories`: log-transformed versions to reduce skew in cooking time and calories.
+
+In the pipeline, I used a `ColumnTransformer` that:
+- Standardized smoother numeric columns (`minutes`, `n_steps`, `n_ingredients`, `minutes_per_step`) with `StandardScaler`.
+- Applied `QuantileTransformer` to heavier-tailed variables (`calories`, `protein_pdv`, `log_minutes`, `log_calories`) to make them closer to normal for logistic regression.
+
+I then used `GridSearchCV` over `C ∈ {0.1, 1.0, 10.0}` and `class_weight ∈ {None, "balanced"}` and found that `C = 0.1` and `class_weight = None` worked best. On the same test set as the baseline, the final model slightly improved both accuracy and F1 for the positive class. The gain is small, but the final model is more principled: it uses features that better reflect recipe complexity and nutrition and is tuned rather than relying on default settings.
+
+## Fairness Analysis
+
+To check whether my final model behaves differently for different types of recipes, I compared its performance on **quick recipes** vs. **very long recipes**:
+
+- **Group X:** recipes with `minutes ≤ 30` (quick recipes)  
+- **Group Y:** recipes with `minutes > 120` (very long recipes)
+
+For both groups, I evaluated the model using the **F1-score for the positive class** (`is_highly_rated = 1`). This metric is appropriate because I care about how well the model identifies highly rated recipes, and the classes are somewhat imbalanced, so F1 is more informative than accuracy alone.
+
+**Null Hypothesis (H₀):**  
+The model is fair with respect to cooking time. Its F1-score for quick recipes and very long recipes is roughly the same; any difference is due to random chance.
+
+**Alternative Hypothesis (H₁):**  
+The model is unfair. Its F1-score for quick recipes is different from its F1-score for very long recipes.
+
+As a test statistic, I used the **absolute difference in F1-scores** between Group X and Group Y, and I set the significance level to α = 0.05. In the observed data, this difference was very small. I then ran a permutation test by repeatedly shuffling the group labels and recomputing the difference in F1. The resulting empirical p-value was about 0.47.
+
+Since 0.47 is much larger than 0.05, I fail to reject the null hypothesis. Based on this analysis, I do not find strong evidence that my model’s performance is substantially different for quick recipes versus very long recipes, at least in this dataset.
