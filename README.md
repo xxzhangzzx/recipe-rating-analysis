@@ -171,9 +171,9 @@ On the held-out test set, the baseline model achieved an accuracy of about 0.75 
 
 For my final model, I kept the same prediction task but added a few features and used a richer preprocessing + tuning setup.
 
-On top of the baseline features (`minutes`, `n_steps`, `n_ingredients`, `calories`, `protein_pdv`), I added:
+On top of the baseline features I added:
 
-- `minutes_per_step`: time per step, which reflects how “intense” each step is.
+- `minutes_per_step`: time per step, which reflects how intense each step is.
 - `log_minutes` and `log_calories`: log-transformed versions to reduce skew in cooking time and calories.
 
 In the pipeline, I used a `ColumnTransformer` that:
